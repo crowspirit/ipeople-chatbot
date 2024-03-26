@@ -56,10 +56,15 @@ def get_keyboard():
 
 def get_keyboard_city():
     city = ["Київ","Львів","Одеса","Вінниця","Івано-франківськ","Полтава","Тернопіль","Дніпро","Самбір","Біла Церква","Харків","Рівне","Житомир","Хмельницький", "Калинівка" ,"Бар" ,"Ужгород" , "Червоноград" ,]
-    keyboard = types.InlineKeyboardMarkup()
+    # keyboard = types.InlineKeyboardMarkup()
+    buttons = []
     for i in city:
-        keyboard.add(types.InlineKeyboardButton(text=i, callback_data=f"city_{i}"))
-    return keyboard
+        button = types.InlineKeyboardButton(text=i, callback_data=f"city_{i}")
+        if len(buttons) == 0 or len(buttons[-1]) == 2: # якщо останній рядок заповнений
+            buttons.append([button])
+        else:
+            buttons[-1].append(button)
+    return types.InlineKeyboardMarkup(buttons)
 def get_keyboard_shops(shop):
     print(shop)
     shops = {
@@ -150,14 +155,14 @@ def handle_teachers_callback(call):
 def handle_teachers_callback(call):
     if "manager" == call.data:
         keyboard = types.InlineKeyboardMarkup()
-        button_today = types.InlineKeyboardButton(text="Прийняти", callback_data=f"{call.message.chat.id}")
+        button_today = types.InlineKeyboardButton(text="Прийняти✅", callback_data=f"{call.message.chat.id}")
         keyboard.add(button_today)
         bot.send_message(config.chat_id_help, f"Новий запит від:\n{call.message.from_user.first_name}  {call.message.from_user.last_name} (@{call.message.from_user.username})\n{call.message.text[:-33]}", reply_markup=keyboard)
         bot.send_message(call.message.chat.id, "Ваш запит прийнято. Зачекайте, будь ласка доки менеджер приєднається до чату.")
         bot.delete_message(call.message.chat.id,call.message.id)
     elif "service" == call.data:
         keyboard = types.InlineKeyboardMarkup()
-        button_today = types.InlineKeyboardButton(text="Прийняти", callback_data=f"{call.message.chat.id}")
+        button_today = types.InlineKeyboardButton(text="Прийняти✅", callback_data=f"{call.message.chat.id}")
         keyboard.add(button_today)
         bot.send_message(config.chat_id_service, f"Новий запит від:\n{call.message.from_user.first_name}  {call.message.from_user.last_name} (@{call.message.from_user.username})\n{call.message.text[:-33]}", reply_markup=keyboard)
         bot.send_message(call.message.chat.id, "Ваш запит прийнято. Зачекайте, будь ласка доки менеджер приєднається до чату.")
@@ -215,7 +220,8 @@ def handle_teachers_callback(call):
 @bot.message_handler(func=lambda message: message.text == "🔧 - Ремонт")
 def info(message):
     if str(message.chat.id)[0] != "-":
-        remove_markup = types.ReplyKeyboardRemove()
+        remove_markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+        remove_markup.add(types.KeyboardButton(text="Повернутись⬅️"))
         bot.send_message(message.chat.id, "Задайте ваше питання.", reply_markup=remove_markup)
         bot.register_next_step_handler(message, chat_service)
 
@@ -223,14 +229,24 @@ def info(message):
 @bot.message_handler(func=lambda message: message.text == "🗨️ - Менеджер")
 def info(message):
     if str(message.chat.id)[0] != "-":
-        remove_markup = types.ReplyKeyboardRemove()
+        remove_markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+        remove_markup.add(types.KeyboardButton(text="Повернутись⬅️"))
         bot.send_message(message.chat.id, "Задайте ваше питання.", reply_markup=remove_markup)
         bot.register_next_step_handler(message, chat_help)
 
 # Функція для обробки чату
 def chat_help(message):
+    if message.text[0] == '/':
+        remove_markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+        remove_markup.add(types.KeyboardButton(text="Повернутись⬅️"))
+        bot.send_message(message.chat.id, "Надішліть повідомлення, а не команду.", reply_markup=remove_markup)
+        bot.register_next_step_handler(message, chat_call)
+        return
+    elif message.text == 'Повернутись⬅️':
+        bot.send_message(message.chat.id,"Ви повернулись до головного меню.",reply_markup=get_keyboard())
+        return
     keyboard = types.InlineKeyboardMarkup()
-    button_today = types.InlineKeyboardButton(text="Прийняти", callback_data=f"{message.chat.id}")
+    button_today = types.InlineKeyboardButton(text="Прийняти✅", callback_data=f"{message.chat.id}")
     keyboard.add(button_today)
     bot.send_message(config.chat_id_help, f"Новий запит від:\n{message.from_user.first_name}  {message.from_user.last_name} (@{message.from_user.username})\n{message.text}", reply_markup=keyboard)
     bot.send_message(message.chat.id, "Ваш запит прийнято. Зачекайте, будь ласка доки менеджер приєднається до чату.")
@@ -239,8 +255,17 @@ def chat_help(message):
 
 # Функція для обробки чату
 def chat_service(message):
+    if message.text[0] == '/':
+        remove_markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+        remove_markup.add(types.KeyboardButton(text="Повернутись⬅️"))
+        bot.send_message(message.chat.id, "Надішліть повідомлення, а не команду.", reply_markup=remove_markup)
+        bot.register_next_step_handler(message, chat_call)
+        return
+    elif message.text == 'Повернутись⬅️':
+        bot.send_message(message.chat.id,"Ви повернулись до головного меню.",reply_markup=get_keyboard())
+        return
     keyboard = types.InlineKeyboardMarkup()
-    button_today = types.InlineKeyboardButton(text="Прийняти", callback_data=f"{message.chat.id}")
+    button_today = types.InlineKeyboardButton(text="Прийняти✅", callback_data=f"{message.chat.id}")
     keyboard.add(button_today)
     bot.send_message(config.chat_id_service, f"Новий запит від:\n{message.from_user.first_name}  {message.from_user.last_name} (@{message.from_user.username})\n{message.text}", reply_markup=keyboard)
     bot.send_message(message.chat.id, "Ваш запит прийнято. Зачекайте, будь ласка доки менеджер приєднається до чату.", reply_markup=get_keyboard())
@@ -255,7 +280,7 @@ def handle_teachers_callback(call):
         print(id_status_dict)
         markup_end = types.ReplyKeyboardMarkup(resize_keyboard=True)
         markup_end_user = types.ReplyKeyboardMarkup(resize_keyboard=True)
-        buttons = types.KeyboardButton(text="Завершити чат")
+        buttons = types.KeyboardButton(text="Завершити чат❌")
         buttons1 = types.KeyboardButton(text="Завершити чат через 5 хв")
         markup_end.add(buttons, buttons1)
         markup_end_user.add(buttons)
@@ -268,25 +293,25 @@ def info(message):
     print(list(id_status_dict.values()))
     if message.content_type == 'text':
         if str(message.chat.id) in id_status_dict.keys() and id_status_dict[str(message.chat.id)] != False:
-            if message.text == "Завершити чат":
+            if message.text == "Завершити чат❌":
                 bot.send_message(id_status_dict[str(message.chat.id)], "Менеджер покинув чат", reply_markup=get_keyboard())
                 bot.send_message(message.chat.id, "Сеанс завершено", reply_markup=types.ReplyKeyboardRemove())
                 id_status_dict[str(message.chat.id)] = False
             elif message.text == "Завершити чат через 5 хв":
-                bot.send_message(message.chat.id, "Відлік почався", reply_markup=types.ReplyKeyboardMarkup(resize_keyboard=True).add(types.KeyboardButton(text="Завершити чат")))
+                bot.send_message(message.chat.id, "Відлік почався", reply_markup=types.ReplyKeyboardMarkup(resize_keyboard=True).add(types.KeyboardButton(text="Завершити чат❌")))
                 bot.send_message(id_status_dict[str(message.chat.id)], "Якщо ви недішлете повідомлення протягом 5 хвилин чат завершиться.")
                 end_timer(id_status_dict[str(message.chat.id)])
             else:
                 bot.send_message(id_status_dict[str(message.chat.id)], message.text)
         elif str(message.chat.id) in list(id_status_dict.values()) and str(message.chat.id) in list(id_status_dict.values()):
-            if message.text == "Завершити чат":
+            if message.text == "Завершити чат❌":
                 bot.send_message(next(key for key, value in id_status_dict.items() if value == str(message.chat.id)), "Користувач покинув чат",reply_markup=types.ReplyKeyboardRemove() )
                 bot.send_message(message.chat.id, "Сеанс завершено", reply_markup=get_keyboard())
                 id_status_dict[next(key for key, value in id_status_dict.items() if value == str(message.chat.id))] = False
             elif str(message.chat.id) in timer_user.keys():
                 print(timer_user)
                 timer_user.pop(str(message.chat.id))
-                bot.send_message(next(key for key, value in id_status_dict.items() if value == str(message.chat.id)), message.text, reply_markup=types.ReplyKeyboardMarkup(resize_keyboard=True).add(types.KeyboardButton(text="Завершити чат"),types.KeyboardButton(text="Завершити чат через 5 хв")))
+                bot.send_message(next(key for key, value in id_status_dict.items() if value == str(message.chat.id)), message.text, reply_markup=types.ReplyKeyboardMarkup(resize_keyboard=True).add(types.KeyboardButton(text="Завершити чат❌"),types.KeyboardButton(text="Завершити чат через 5 хв")))
             else:
                 bot.send_message(next(key for key, value in id_status_dict.items() if value == str(message.chat.id)), message.text)
         elif str(message.chat.id) in list(id_status_dict.values()):
@@ -335,21 +360,31 @@ def info(message):
 def info(message):
     print(1212)
     if str(message.chat.id)[0] != "-":
-        remove_markup = types.ReplyKeyboardRemove()
+        remove_markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+        remove_markup.add(types.KeyboardButton(text="Повернутись⬅️"))
         bot.send_message(message.chat.id, "Надішліть свій номер.", reply_markup=remove_markup)
         bot.register_next_step_handler(message, chat_call)
 
 # Функція для обробки чату
 def chat_call(message):
+    if message.text[0] == '/':
+        remove_markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+        remove_markup.add(types.KeyboardButton(text="Повернутись⬅️"))
+        bot.send_message(message.chat.id, "Надішліть свій номер, а не команду.", reply_markup=remove_markup)
+        bot.register_next_step_handler(message, chat_call)
+        return
+    elif message.text == 'Повернутись⬅️':
+        bot.send_message(message.chat.id,"Ви повернулись до головного меню.",reply_markup=get_keyboard())
+        return
     keyboard = types.InlineKeyboardMarkup()
-    button_today = types.InlineKeyboardButton(text="Прийняти", callback_data=f"call_{message.chat.id}")
+    button_today = types.InlineKeyboardButton(text="Прийняти✅", callback_data=f"call_{message.chat.id}")
     keyboard.add(button_today)
     bot.send_message(config.chat_id_call, f"Телефонний дзвінок:\n{message.from_user.first_name}  {message.from_user.last_name} (@{message.from_user.username})\n{message.text}", reply_markup=keyboard)
     bot.send_message(message.chat.id, "Ми прийняли ваш запит. Зачекайте, будь ласка доки менеджер вам зателефонує.",reply_markup=get_keyboard())
 
 
 # ----------------------------деволт повідомлення-----------------------------------------------
-@bot.message_handler(content_types=['text'])
+@bot.message_handler(content_types=['text'], func=lambda message: message.chat.id[0] != '-')
 def prop(message):
     keyboard = types.InlineKeyboardMarkup()
     button_1 = types.InlineKeyboardButton(text="Менеджеру", callback_data=f"manager")
