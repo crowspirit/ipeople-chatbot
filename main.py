@@ -384,7 +384,7 @@ def chat_call(message):
 
 
 # ----------------------------деволт повідомлення-----------------------------------------------
-@bot.message_handler(content_types=['text'], func=lambda message: str(message.chat.id[0]) != '-')
+@bot.message_handler(content_types=['text'], func=lambda message: str(message.chat.id)[0] != '-')
 def prop(message):
     keyboard = types.InlineKeyboardMarkup()
     button_1 = types.InlineKeyboardButton(text="Менеджеру", callback_data=f"manager")
